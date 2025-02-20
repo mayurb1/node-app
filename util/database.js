@@ -1,5 +1,5 @@
 // using sequelize to connect to the database and it's configuration
-const Sequelize = require("sequelize");
+const { Sequelize } = require("sequelize");
 
 const sequelize = new Sequelize("node study", "root", "indianic", {
   dialect: "mysql",
