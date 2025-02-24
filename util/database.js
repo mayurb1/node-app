@@ -1,20 +1,31 @@
-// using sequelize to connect to the database and it's configuration
-const { Sequelize } = require("sequelize");
+const mongodb = require("mongodb");
+const MongoClient = mongodb.MongoClient;
+require("dotenv").config();
 
-const sequelize = new Sequelize("node study", "root", "indianic", {
-  dialect: "mysql",
-  host: "localhost",
-});
+const password = process.env.MONGO_ATLAS_PASSWORD;
 
-module.exports = sequelize;
+let _db;
+const mongoConnect = (callback) => {
+  MongoClient.connect(
+    `mongodb+srv://mayurb:${password}@cluster0.bcjl8.mongodb.net/shop?retryWrites=true&w=majority&appName=Cluster0`
+  )
+    .then((client) => {
+      console.log("Connected!");
+      _db = client.db();
+      callback(client, "mayur");
+    })
+    .catch((err) => {
+      console.log(err);
+      throw err;
+    });
+};
 
-// using row mysql queries to connect to the database and it's configuration
-// const mysql = require("mysql2");
-// const pool = mysql.createPool({
-//   host: "localhost",
-//   user: "root",
-//   database: "node study",
-//   password: "indianic",
-// });
+const getDb = () => {
+  if (_db) {
+    return _db;
+  }
+  throw "No database found!";
+};
 
-// module.exports = pool.promise();
+exports.mongoConnect = mongoConnect;
+exports.getDb = getDb;
