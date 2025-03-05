@@ -1,26 +1,45 @@
 const path = require("path");
 require("dotenv").config();
 const password = process.env.MONGO_ATLAS_PASSWORD;
+const MONGODB_URI = `mongodb+srv://mayurb:${password}@cluster0.bcjl8.mongodb.net/shop?retryWrites=true&w=majority&appName=Cluster0`;
 
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
+const session = require("express-session");
+const MongoDBStore = require("connect-mongodb-session")(session);
 
 const errorController = require("./controllers/error");
 const User = require("./models/user");
 const app = express();
+const store = new MongoDBStore({
+  uri: MONGODB_URI,
+  collection: "sessions",
+});
 
 app.set("view engine", "ejs");
 app.set("views", "views");
 
 const adminRoutes = require("./routes/admin");
 const shopRoutes = require("./routes/shop");
+const authRoutes = require("./routes/auth");
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
+app.use(
+  session({
+    secret: "my secrete",
+    resave: false,
+    saveUninitialized: false,
+    store: store,
+  })
+);
 
 app.use((req, res, next) => {
-  User.findById("67bec329a9c922c35a4ae5e1")
+  if (!req.session.user) {
+    return next();
+  }
+  User.findById(req.session.user._id)
     .then((user) => {
       req.user = user;
       next();
@@ -30,13 +49,12 @@ app.use((req, res, next) => {
 
 app.use("/admin", adminRoutes);
 app.use(shopRoutes);
+app.use(authRoutes);
 
 app.use(errorController.get404);
 
 mongoose
-  .connect(
-    `mongodb+srv://mayurb:${password}@cluster0.bcjl8.mongodb.net/shop?retryWrites=true&w=majority&appName=Cluster0`
-  )
+  .connect(MONGODB_URI)
   .then(() => {
     User.findOne().then((user) => {
       if (!user) {
