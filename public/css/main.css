@@ -199,6 +199,20 @@ form {
   color: white;
 }
 
+.user-message {
+  margin: auto;
+  width: 90%;
+  border: 1px solid red;
+  padding: 1rem;
+  border-radius: 5px;
+  text-align: center;
+  background-color: rgb(240, 147, 151);
+}
+
+.user-message--error {
+  border-color: red;
+}
+
 @media (min-width: 768px) {
   .main-header__nav {
     display: flex;

@@ -1,11 +1,17 @@
 const bcrypt = require("bcryptjs");
 const User = require("../models/user");
+require("dotenv").config();
+const sgMail = require("@sendgrid/mail");
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 exports.getLogin = (req, res, next) => {
+  console.log(req.flash("error")[0]);
+  const message = req.flash("error")[0] || null;
   res.render("auth/login", {
     path: "/login",
     pageTitle: "Login",
     isAuthenticated: req.session.isLoggedIn,
+    errorMessage: message,
   });
 };
 
@@ -14,6 +20,7 @@ exports.postLogin = (req, res, next) => {
   User.findOne({ email })
     .then((user) => {
       if (!user) {
+        req.flash("error", "Invalid email or password");
         return res.redirect("/login");
       }
       return bcrypt
@@ -59,7 +66,15 @@ exports.postSignUp = (req, res, next) => {
             return user.save();
           })
           .then(() => {
-            return res.redirect("/login");
+            res.redirect("/login");
+            return sgMail
+              .send({
+                to: email,
+                from: "mayur@yopmail.com",
+                subject: "Signup succseeded!",
+                html: "<h2>You successfully signed up!</h1>",
+              })
+              .catch((err) => console.log(err));
           });
       }
     })

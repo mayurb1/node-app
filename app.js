@@ -1,13 +1,13 @@
 const path = require("path");
 require("dotenv").config();
-const password = process.env.MONGO_ATLAS_PASSWORD;
-const MONGODB_URI = `mongodb+srv://mayurb:${password}@cluster0.bcjl8.mongodb.net/shop?retryWrites=true&w=majority&appName=Cluster0`;
+const MONGODB_URI = process.env.MONGO_URI;
 
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session);
+const flash = require("connect-flash");
 
 const errorController = require("./controllers/error");
 const User = require("./models/user");
@@ -34,6 +34,7 @@ app.use(
     store: store,
   })
 );
+app.use(flash());
 
 app.use((req, res, next) => {
   if (!req.session.user) {
@@ -56,6 +57,11 @@ app.use(errorController.get404);
 mongoose
   .connect(MONGODB_URI)
   .then(() => {
-    app.listen(3000);
+    console.log("Connected to MongoDB successfully");
+    app.listen(3001, () => {
+      console.log("Server running on port 3001");
+    });
   })
-  .catch((err) => console.log(err));
+  .catch((err) => {
+    console.error("MongoDB connection error:", err);
+  });
